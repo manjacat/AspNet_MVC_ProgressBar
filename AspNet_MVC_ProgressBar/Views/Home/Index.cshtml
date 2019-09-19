@@ -1,0 +1,114 @@
+﻿@{
+    /*Khairil Rizal punya kod*/
+
+    ViewBag.Title = "Progress Bar";
+}
+<div>
+    &nbsp;
+</div>
+@using (Html.BeginForm("Index", "Home", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <section class="col-2">
+            <label class="label">
+                Total Rows<font color="red">*</font>
+            </label>
+        </section>
+        <section class="col-4">
+            <label class="input">
+                @Html.DropDownList("totalRecords", null, String.Empty, htmlAttributes: new { @class = "form-control" })
+            </label>
+        </section>
+    </div>
+    <div class="row">
+        <section class="col-6">
+            <div class="progress" id="progressbar" style="display:none">
+                <div id="progressbar-label" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar"
+                     style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="row">
+        <section class="col-6">
+            <div>
+                <span id="lblMessage" class="text-info" style="display:none;">No Rows Selected.</span>
+            </div>
+        </section>
+    </div>
+    <footer class="text-right">
+        <button type="button" class="btn btn-primary" id="btnStart"/>
+    </footer>
+}
+@section scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //debugger;
+            //declare variable
+            var progressbarDiv = $("#progressbar");
+            var progressbarLabel = $("#progressbar-label");
+            var lblMessage = $("#lblMessage");
+            var lblRecords = $("#totalRecords");
+            var ajaxURL = "../Home/ProsesData";
+            EnableButton();
+
+            //start progressbar
+            $("#btnStart").click(function () {
+                //debugger;
+                lblMessage.hide();
+                var totalRows = Number(lblRecords.val());                
+
+                if (totalRows > 0) {
+                    DisableButton();
+                    var reset = 0;
+                    progressbarLabel.css('width', reset + '%').attr('aria-valuenow', reset);
+                    progressbarLabel.text(reset + '%');
+                    progressbarDiv.fadeIn(500);                    
+                    
+                    var counter = 0;
+
+                    for (var i = 0; i < totalRows; i++) {
+                        $.ajax({
+                            type: 'POST',
+                            url: ajaxURL,
+                            data: { "id": totalRows },
+                            datatype: "json",
+                            success: function (data) {
+                                //debugger;
+                                counter++;
+                                var valeur = Math.ceil((counter / totalRows) * 100);
+                                console.log('i value is ' + valeur);
+                                progressbarLabel.css('width', valeur + '%').attr('aria-valuenow', valeur);
+                                progressbarLabel.text(valeur + '%');
+                                //alert('Text:' + data.Text + ', Value:' + data.Value);
+                                if (counter == totalRows) {
+                                    //console.log('completed!' + totalRows);
+                                    progressbarLabel.text('Complete!');
+                                    EnableButton();
+                                    progressbarDiv.fadeOut(2000);
+                                }
+                            },
+                            error: function (err) {
+                                alert(err.statusText);
+                            }
+                        });
+                    }
+
+                }
+                else {
+                    lblMessage.show();
+                }
+            });
+        })
+
+        function DisableButton() {
+            $("#btnStart").text("Please Wait");
+            $("#btnStart").attr("disabled", true);
+        }
+        function EnableButton() {
+            $("#btnStart").text("Start Progress Bar");
+            $("#btnStart").attr("disabled", false);
+        }
+    </script>
+}
